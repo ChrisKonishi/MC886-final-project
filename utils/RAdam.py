@@ -1,3 +1,9 @@
+'''
+Liyuan Liu , Haoming Jiang, Pengcheng He, Weizhu Chen, Xiaodong Liu, Jianfeng Gao, and Jiawei Han (2020). 
+On the Variance of the Adaptive Learning Rate and Beyond. the Eighth International Conference on Learning Representations.
+https://github.com/LiyuanLucasLiu/RAdam
+'''
+
 import math
 import torch
 from torch.optim.optimizer import Optimizer, required
