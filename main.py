@@ -64,20 +64,29 @@ def train(args):
     else:
         sys.stdout = Logger(osp.join(args['log_dir'], 'log_train.txt'), mode='w')
         initial_epoch = -1
+        iteration = 0
+        loss_data = {'loss': [], 'iteration': []}
 
     for epoch in range(initial_epoch+1, args['max_epoch']): #train_loop
         for ite, data in enumerate(train_loader):
+            iteration += 1
             #train process
                 #zero o gradiente do optmizer
                 #passa imagens pela rede, calcula o custo, dá um passo do optmizer 
             #print progress
             pass
+        
+        if iteration%200:
+            #record loss to loss_data
+            loss_data['iteration'].append(iteration)
+            #loss_data['loss'].append(loss)
 
         #validate, record progress
         state_dict = {
             'epoch': epoch
             , 'net': net.state_dict()
             , 'optimizer': optim.state_dict()
+            , 'loss_data': loss_data
         }
         torch.save(state_dict, osp.join(args['log_dir'], 'last_state.pth'))
         #validate model
