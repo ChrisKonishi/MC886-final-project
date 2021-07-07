@@ -23,7 +23,7 @@ class GarbageClass(Dataset):
         self.mode = mode
         self.size = size
 
-        self.dir = osp.join(osp.dirname(osp.realpath(__file__)), 'garbage_classification/archive/')
+        self.dir = osp.join(osp.dirname(osp.realpath(__file__)), 'garbage_classification/')
         self.imgs = []
         self.labels = []
 
