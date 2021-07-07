@@ -76,7 +76,7 @@ def train(args):
             #print progress
             pass
         
-        if iteration%200:
+        if iteration%200==0:
             #record loss to loss_data
             loss_data['iteration'].append(iteration)
             #loss_data['loss'].append(loss)

@@ -1,5 +1,7 @@
 logs/
 log/
+play.ipynb
+garbage_classification/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
