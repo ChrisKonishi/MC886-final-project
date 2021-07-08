@@ -60,9 +60,12 @@ class GarbageClass(Dataset):
             im = Image.open(osp.join(self.dir, material, file))
             if im:
                 self.imgs.append(im)
-                self.labels.append(label)
+                self.labels.append(label-1)
             else:
                 continue
+
+    def get_nclass(self):
+        return len(set(self.labels))
 
     def __len__(self):
         return len(self.imgs)

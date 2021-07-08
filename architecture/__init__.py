@@ -1,5 +1,5 @@
-from .Resnet20 import Resnet20
+from .Resnet18 import Resnet18
 
 models = {
-    'resnet-20': Resnet20
+    'resnet-18': Resnet18
 }

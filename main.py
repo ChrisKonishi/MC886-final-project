@@ -9,13 +9,15 @@ from architecture import models
 from utils.RAdam import RAdam
 from utils.Logger import Logger
 
+N_ITER = 50
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Garbage Classification Configuration')
 
     parser.add_argument('-d', '--dataset', type=str, default='GarbageClass',
                         choices=datasets.keys(),  help=f"options: {datasets.keys()}")
     parser.add_argument('--log_dir', type=str, default='./logs', help='Directory to store logs and trained models')
-    parser.add_argument('-model', type=str, default='resnet-20', choices=models.keys(), help=f'Options: {models.keys()}')
+    parser.add_argument('-model', type=str, default='resnet-18', choices=models.keys(), help=f'Options: {models.keys()}')
     parser.add_argument('--lr', type=float, default=1e-4, help=f'Learning Rate')
     parser.add_argument('--max-epoch', type=int, default='100')
     parser.add_argument('--patience', default=-1, type=int,
@@ -50,7 +52,7 @@ def train(args):
                             , pin_memory=True
                             , drop_last=False)
 
-    net = models[args['model']]() #pass args
+    net = models[args['model']](train_set.get_nclass()) #pass args
     net.to(args['device'])
 
     optim = RAdam(net.parameters(), lr=args['lr'])
@@ -59,27 +61,36 @@ def train(args):
 
     if args['resume']:
         sys.stdout = Logger(osp.join(args['log_dir'], 'log_train.txt'), mode='a') #todo print é salvo em um arquivo tambem
-        #carregar statedict
-        pass
+        state_dict = torch.load(osp.join(args['log_dir'], 'last_state.pth'))
+        initial_epoch = state_dict['epoch']
+        loss_data = state_dict['loss_data']
+        net.load_state_dict(state_dict['net'])
+        optim.load_state_dict(state_dict['optimizer'])
+        print(f'Resuming training. Epoch {initial_epoch}')
     else:
         sys.stdout = Logger(osp.join(args['log_dir'], 'log_train.txt'), mode='w')
         initial_epoch = -1
         iteration = 0
         loss_data = {'loss': [], 'iteration': []}
 
+    acu_loss = 0
+
     for epoch in range(initial_epoch+1, args['max_epoch']): #train_loop
-        for ite, data in enumerate(train_loader):
+        for ite, (img, label) in enumerate(train_loader):
             iteration += 1
-            #train process
-                #zero o gradiente do optmizer
-                #passa imagens pela rede, calcula o custo, dá um passo do optmizer 
-            #print progress
-            pass
-        
-        if iteration%200==0:
-            #record loss to loss_data
-            loss_data['iteration'].append(iteration)
-            #loss_data['loss'].append(loss)
+
+            net.zero_grad()
+            out = net(img.to(args['device']))
+            loss = f_loss(out, label.to(args['device']))
+            acu_loss += loss.item()
+            loss.backward()
+            optim.step()
+
+            if iteration%N_ITER==0:
+                loss_data['iteration'].append(iteration)
+                loss_data['loss'].append(acu_loss/N_ITER)
+                print(f'Iteration: {iteration}. Loss: {acu_loss/N_ITER:.4f}')
+                acu_loss = 0
 
         #validate, record progress
         state_dict = {
@@ -101,7 +112,6 @@ if __name__ == '__main__':
     args = parse_args()
     args['device'] = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    print(args)
     random.seed(args['seed'])
     if args['mode'] == 'train':
         train(args)
