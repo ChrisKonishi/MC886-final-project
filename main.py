@@ -69,7 +69,10 @@ def train(args):
         optim.load_state_dict(state_dict['optimizer'])
         best_val = state_dict['best_val']
         best_model = state_dict['best_model']
-        print(f'Resuming training. Epoch {initial_epoch}')
+        iteration = state_dict['iteration']
+        acu_loss_gran = state_dict['acu_loss_gran']
+        acu_loss_epoch = state_dict['acu_loss_epoch']
+        print(f'\nResuming training. Epoch {initial_epoch+1}\n')
     else:
         sys.stdout = Logger(osp.join(args['log_dir'], 'log_train.txt'), mode='w')
         initial_epoch = -1
@@ -77,9 +80,8 @@ def train(args):
         best_val = sys.maxsize
         best_model = None
         loss_data = {'loss': [], 'iteration': []}
-
-    acu_loss_gran = 0
-    acu_loss_epoch = 0
+        acu_loss_gran = 0
+        acu_loss_epoch = 0
 
     for epoch in range(initial_epoch+1, args['max_epoch']): #train_loop
         for ite, (img, label) in enumerate(train_loader):
@@ -108,19 +110,23 @@ def train(args):
             , 'loss_data': loss_data
             , 'best_val': best_val
             , 'best_model': best_model
+            , 'iteration': iteration
+            , 'acu_loss_gran': acu_loss_gran
+            , 'acu_loss_epoch': acu_loss_epoch
         }
         #validate, record progress
         validation_loss = val_loss(net, val_loader, f_loss, args['device'])
         #validate model
         if validation_loss < best_val:
             best_val = validation_loss
-            best_model = epoch
+            best_model = epoch+1
             state_dict['best_val'] = validation_loss
             state_dict['best_model'] = best_model
             torch.save(state_dict, osp.join(args['log_dir'], 'best_state.pth'))
         torch.save(state_dict, osp.join(args['log_dir'], 'last_state.pth'))
-        print(f'\nEpoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss}. Best_model: {epoch}')
-        
+        print(f'\nEpoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss:.4f}. Best_model: {best_model}')
+        sys.stdout.close_open()
+
 def test(args):
     pass
 
