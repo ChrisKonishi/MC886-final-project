@@ -8,6 +8,7 @@ from dataset import datasets
 from architecture import models
 from utils.RAdam import RAdam
 from utils.Logger import Logger
+from utils.val_loss import val_loss
 
 N_ITER = 50
 
@@ -43,7 +44,7 @@ def train(args):
                                 , shuffle=True
                                 #, sampler=valSampler
                                 , pin_memory=True
-                                , drop_last=False)
+                                , drop_last=True)
 
     val_loader = DataLoader(val_set
                             , batch_size=1
@@ -66,44 +67,59 @@ def train(args):
         loss_data = state_dict['loss_data']
         net.load_state_dict(state_dict['net'])
         optim.load_state_dict(state_dict['optimizer'])
+        best_val = state_dict['best_val']
+        best_model = state_dict['best_model']
         print(f'Resuming training. Epoch {initial_epoch}')
     else:
         sys.stdout = Logger(osp.join(args['log_dir'], 'log_train.txt'), mode='w')
         initial_epoch = -1
         iteration = 0
+        best_val = sys.maxsize
+        best_model = None
         loss_data = {'loss': [], 'iteration': []}
 
-    acu_loss = 0
+    acu_loss_gran = 0
+    acu_loss_epoch = 0
 
     for epoch in range(initial_epoch+1, args['max_epoch']): #train_loop
         for ite, (img, label) in enumerate(train_loader):
             iteration += 1
 
-            net.zero_grad()
+            optim.zero_grad()
             out = net(img.to(args['device']))
             loss = f_loss(out, label.to(args['device']))
-            acu_loss += loss.item()
+            acu_loss_gran += loss.item()
+            acu_loss_epoch += loss.item()
             loss.backward()
             optim.step()
 
-            if iteration%N_ITER==0:
+            if N_ITER and iteration%N_ITER==0:
                 loss_data['iteration'].append(iteration)
-                loss_data['loss'].append(acu_loss/N_ITER)
-                print(f'Iteration: {iteration}. Loss: {acu_loss/N_ITER:.4f}')
-                acu_loss = 0
+                loss_data['loss'].append(acu_loss_gran/N_ITER)
+                print(f'Iteration: {iteration}. Loss: {acu_loss_gran/N_ITER:.4f}')
+                acu_loss_gran = 0
 
-        #validate, record progress
+        acu_loss_epoch = acu_loss_epoch/(ite+1)
+
         state_dict = {
             'epoch': epoch
             , 'net': net.state_dict()
             , 'optimizer': optim.state_dict()
             , 'loss_data': loss_data
+            , 'best_val': best_val
+            , 'best_model': best_model
         }
-        torch.save(state_dict, osp.join(args['log_dir'], 'last_state.pth'))
+        #validate, record progress
+        validation_loss = val_loss(net, val_loader, f_loss, args['device'])
         #validate model
-        best_val = False
-        if best_val:
+        if validation_loss < best_val:
+            best_val = validation_loss
+            best_model = epoch
+            state_dict['best_val'] = validation_loss
+            state_dict['best_model'] = best_model
             torch.save(state_dict, osp.join(args['log_dir'], 'best_state.pth'))
+        torch.save(state_dict, osp.join(args['log_dir'], 'last_state.pth'))
+        print(f'\nEpoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss}. Best_model: {epoch}')
         
 def test(args):
     pass
