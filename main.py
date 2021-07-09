@@ -88,7 +88,7 @@ def train(args):
             iteration += 1
 
             optim.zero_grad()
-            out = net(img.to(args['device']))
+            out = net(img.to(args['device'])) #TODO adicionar softmax ou mudar a loss function
             loss = f_loss(out, label.to(args['device']))
             acu_loss_gran += loss.item()
             acu_loss_epoch += loss.item()
