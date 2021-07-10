@@ -9,8 +9,7 @@ from architecture import models
 from utils.RAdam import RAdam
 from utils.Logger import Logger
 from utils.val_loss import val_loss
-
-N_ITER = 50
+from utils.plot_loss import plot_loss
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Garbage Classification Configuration')
@@ -70,8 +69,6 @@ def train(args):
         best_val = state_dict['best_val']
         best_model = state_dict['best_model']
         iteration = state_dict['iteration']
-        acu_loss_gran = state_dict['acu_loss_gran']
-        acu_loss_epoch = state_dict['acu_loss_epoch']
         print(f'\nResuming training. Epoch {initial_epoch+1}\n')
     else:
         sys.stdout = Logger(osp.join(args['log_dir'], 'log_train.txt'), mode='w')
@@ -79,29 +76,27 @@ def train(args):
         iteration = 0
         best_val = sys.maxsize
         best_model = None
-        loss_data = {'loss': [], 'iteration': []}
-        acu_loss_gran = 0
-        acu_loss_epoch = 0
+        loss_data = {'loss_train': [], 'loss_val': [], 'epoch': []}
 
     for epoch in range(initial_epoch+1, args['max_epoch']): #train_loop
+        acu_loss_epoch = 0
         for ite, (img, label) in enumerate(train_loader):
             iteration += 1
 
             optim.zero_grad()
             out = net(img.to(args['device'])) #TODO adicionar softmax ou mudar a loss function
             loss = f_loss(out, label.to(args['device']))
-            acu_loss_gran += loss.item()
             acu_loss_epoch += loss.item()
             loss.backward()
             optim.step()
 
-            if N_ITER and iteration%N_ITER==0:
-                loss_data['iteration'].append(iteration)
-                loss_data['loss'].append(acu_loss_gran/N_ITER)
-                print(f'Iteration: {iteration}. Loss: {acu_loss_gran/N_ITER:.4f}')
-                acu_loss_gran = 0
-
         acu_loss_epoch = acu_loss_epoch/(ite+1)
+        validation_loss = val_loss(net, val_loader, f_loss, args['device'])
+        loss_data['epoch'].append(epoch+1)
+        loss_data['loss_train'].append(acu_loss_epoch)
+        loss_data['loss_val'].append(validation_loss)
+
+        plot_loss(loss_data, args['log_dir'])
 
         state_dict = {
             'epoch': epoch
@@ -111,11 +106,7 @@ def train(args):
             , 'best_val': best_val
             , 'best_model': best_model
             , 'iteration': iteration
-            , 'acu_loss_gran': acu_loss_gran
-            , 'acu_loss_epoch': acu_loss_epoch
         }
-        #validate, record progress
-        validation_loss = val_loss(net, val_loader, f_loss, args['device'])
         #validate model
         if validation_loss < best_val:
             best_val = validation_loss
