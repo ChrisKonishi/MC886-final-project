@@ -124,7 +124,7 @@ def train(args):
             state_dict['best_model'] = best_model
             torch.save(state_dict, osp.join(args['log_dir'], 'best_state.pth'))
         torch.save(state_dict, osp.join(args['log_dir'], 'last_state.pth'))
-        print(f'\nEpoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss:.4f}. Best_model: {best_model}')
+        print(f'Epoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss:.4f}. Best_model: {best_model}')
         sys.stdout.close_open()
 
 def test(args):
