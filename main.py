@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument('-d', '--dataset', type=str, default='GarbageClass',
                         choices=datasets.keys(),  help=f"options: {datasets.keys()}")
     parser.add_argument('--log-dir', type=str, default='./logs', help='Directory to store logs and trained models')
-    parser.add_argument('-model', type=str, default='resnet-18', choices=models.keys(), help=f'Options: {models.keys()}')
+    parser.add_argument('--model', type=str, default='resnet-18', choices=models.keys(), help=f'Options: {models.keys()}')
     parser.add_argument('--lr', type=float, default=1e-4, help=f'Learning Rate')
     parser.add_argument('--max-epoch', type=int, default='100')
     parser.add_argument('--patience', default=-1, type=int,
