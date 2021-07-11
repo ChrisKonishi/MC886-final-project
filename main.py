@@ -3,6 +3,7 @@ import argparse, sys
 import os, os.path as osp
 import random
 from torch.utils.data import DataLoader
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
 
 from dataset import datasets
 from architecture import models
@@ -119,7 +120,41 @@ def train(args):
         sys.stdout.close_open()
 
 def test(args):
-    pass
+    if not osp.isdir(args['log_dir']):
+        raise Exception(f'Missing directory: {args["log_dir"]}')
+
+    test_set = datasets[args['dataset']](mode='test')
+    test_loader = DataLoader(test_set
+                            , batch_size=1
+                            , shuffle=False
+                            #, sampler=valSampler
+                            , pin_memory=True
+                            , drop_last=False)
+
+    net = models[args['model']](test_set.get_nclass()) #pass args
+    net.to(args['device'])
+
+    sys.stdout = Logger(osp.join(args['log_dir'], 'log_test.txt'), mode='w')
+    state_dict = torch.load(osp.join(args['log_dir'], 'best_state.pth'))
+    net.load_state_dict(state_dict['net'])
+    net.eval()
+
+    gts = []
+    preds = []
+
+    for i, (img, label) in enumerate(test_loader):
+        preds.append(torch.argmax(net(img.to(args['device']))).item())
+        gts.append(label.item())
+
+    print(f'Testing model: {args["model"]}\n')
+    print(f'Accuracy: {accuracy_score(gts, preds):.6f}')
+    print(f'Precision: {precision_score(gts, preds, average="macro"):.6f}')
+    print(f'Recall: {recall_score(gts, preds, average="macro"):.6f}')
+    print(f'F1 Score: {f1_score(gts, preds, average="macro"):.6f}')
+    print('\n')
+    print('Confusion Matrix')
+    print(confusion_matrix(gts, preds))
+
 
 if __name__ == '__main__':
     args = parse_args()
