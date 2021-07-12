@@ -86,7 +86,7 @@ def train(args):
             img = img.to(args['device'])
             label = label.to(args['device'])
             optim.zero_grad()
-            if args['model'] == 'inception-v3':
+            if args['model'][0] == 'inception-v3':
                 out, aux_out = net(img)
                 loss = f_loss(out, label) + 0.4*f_loss(aux_out, label)
             else:
