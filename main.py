@@ -3,6 +3,7 @@ import argparse, sys
 import os, os.path as osp
 import random
 from torch.utils.data import DataLoader
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
 
 from dataset import datasets
 from architecture import models
@@ -35,7 +36,7 @@ def train(args):
     except FileExistsError:
         pass
 
-    train_set = datasets[args['dataset']](mode='train') #pass other args too
+    train_set = datasets[args['dataset']](mode='train', size=models[args['model']][1]) #pass other args too
     val_set = datasets[args['dataset']](mode='val')
 
     train_loader = DataLoader(train_set
@@ -52,7 +53,7 @@ def train(args):
                             , pin_memory=True
                             , drop_last=False)
 
-    net = models[args['model']](train_set.get_nclass()) #pass args
+    net = models[args['model']][0](train_set.get_nclass()) #pass args
     net.to(args['device'])
 
     optim = RAdam(net.parameters(), lr=args['lr'])
@@ -96,7 +97,7 @@ def train(args):
             optim.step()
 
         acu_loss_epoch = acu_loss_epoch/(ite+1)
-        validation_loss = val_loss(net, val_loader, f_loss, args['device'])
+        validation_loss, val_acc = val_loss(net, val_loader, f_loss, args['device'])
         loss_data['epoch'].append(epoch+1)
         loss_data['loss_train'].append(acu_loss_epoch)
         loss_data['loss_val'].append(validation_loss)
@@ -120,11 +121,45 @@ def train(args):
             state_dict['best_model'] = best_model
             torch.save(state_dict, osp.join(args['log_dir'], 'best_state.pth'))
         torch.save(state_dict, osp.join(args['log_dir'], 'last_state.pth'))
-        print(f'Epoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss:.4f}. Best_model: {best_model}')
+        print(f'Epoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss:.4f}. Val Acc: {val_acc:.4f}. Best_model: {best_model}')
         sys.stdout.close_open()
 
 def test(args):
-    pass
+    if not osp.isdir(args['log_dir']):
+        raise Exception(f'Missing directory: {args["log_dir"]}')
+
+    test_set = datasets[args['dataset']](mode='test', size=models[args['model']][1])
+    test_loader = DataLoader(test_set
+                            , batch_size=1
+                            , shuffle=False
+                            #, sampler=valSampler
+                            , pin_memory=True
+                            , drop_last=False)
+
+    net = models[args['model']][0](test_set.get_nclass()) #pass args
+    net.to(args['device'])
+
+    sys.stdout = Logger(osp.join(args['log_dir'], 'log_test.txt'), mode='w')
+    state_dict = torch.load(osp.join(args['log_dir'], 'best_state.pth'))
+    net.load_state_dict(state_dict['net'])
+    net.eval()
+
+    gts = []
+    preds = []
+
+    for i, (img, label) in enumerate(test_loader):
+        preds.append(torch.argmax(net(img.to(args['device']))).item())
+        gts.append(label.item())
+
+    print(f'Testing model: {args["model"]}\n')
+    print(f'Accuracy: {accuracy_score(gts, preds):.6f}')
+    print(f'Precision: {precision_score(gts, preds, average="macro"):.6f}')
+    print(f'Recall: {recall_score(gts, preds, average="macro"):.6f}')
+    print(f'F1 Score: {f1_score(gts, preds, average="macro"):.6f}')
+    print('\n')
+    print('Confusion Matrix')
+    print(confusion_matrix(gts, preds))
+
 
 if __name__ == '__main__':
     args = parse_args()
