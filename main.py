@@ -82,10 +82,15 @@ def train(args):
         acu_loss_epoch = 0
         for ite, (img, label) in enumerate(train_loader):
             iteration += 1
-
+            img = img.to(args['device'])
+            label = label.to(args['device'])
             optim.zero_grad()
-            out = net(img.to(args['device'])) #TODO adicionar softmax ou mudar a loss function
-            loss = f_loss(out, label.to(args['device']))
+            if args['model'] == 'inception-v3':
+                out, aux_out = net(img)
+                loss = f_loss(out, label) + 0.4*f_loss(aux_out, label)
+            else:
+                out = net(img)
+                loss = f_loss(out, label)
             acu_loss_epoch += loss.item()
             loss.backward()
             optim.step()
