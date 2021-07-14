@@ -19,7 +19,7 @@ except ImportError:
 # Data augmentation é feito aqui, vide transforms. Precisa redimensionar a imagem para o tamnho certo tbm
 #   https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 class GarbageClass(Dataset):
-    def __init__(self, mode='train', size=(224,224)): #mode: train, val, test. size = (h,w)
+    def __init__(self, mode='train', size=(224,224), args={}): #mode: train, val, test. size = (h,w)
         self.mode = mode
         self.size = size
 
@@ -47,6 +47,8 @@ class GarbageClass(Dataset):
                 transforms.Resize(size)
             ]
         compose.append(transforms.ToTensor())
+        if args['pretrained']:
+            compose.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
         self.transform = transforms.Compose(compose)
 
         self.index = pd.read_csv(idx_file, header=None, names=['img', 'class'], sep='\s+')
