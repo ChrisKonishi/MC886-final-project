@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument('--log-dir', type=str, default='./logs', help='Directory to store logs and trained models')
     parser.add_argument('--model', type=str, default='resnet-18', choices=models.keys(), help=f'Options: {models.keys()}')
     parser.add_argument('--lr', type=float, default=1e-4, help=f'Learning Rate')
+    parser.add_argument('--pretrained', action='store_true')
     parser.add_argument('--max-epoch', type=int, default='100')
     parser.add_argument('--patience', default=-1, type=int,
                         help="number of epochs without model improvement (-1 to disable it)")
@@ -53,7 +54,7 @@ def train(args):
                             , pin_memory=True
                             , drop_last=False)
 
-    net = models[args['model']][0](train_set.get_nclass()) #pass args
+    net = models[args['model']][0](train_set.get_nclass(), pretrained=args['pretrained']) #pass args
     net.to(args['device'])
 
     optim = RAdam(net.parameters(), lr=args['lr'])
