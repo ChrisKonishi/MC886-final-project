@@ -137,7 +137,7 @@ def test(args):
                             , pin_memory=True
                             , drop_last=False)
 
-    net = models[args['model']][0](test_set.get_nclass()) #pass args
+    net = models[args['model']][0](test_set.get_nclass(), pretrained=args['pretrained']) #pass args
     net.to(args['device'])
 
     sys.stdout = Logger(osp.join(args['log_dir'], 'log_test.txt'), mode='w')
