@@ -38,7 +38,7 @@ def train(args):
         pass
 
     train_set = datasets[args['dataset']](mode='train', size=models[args['model']][1], args=args) #pass other args too
-    val_set = datasets[args['dataset']](mode='val', args=args)
+    val_set = datasets[args['dataset']](mode='val', args=args, size=models[args['model']][1])
 
     train_loader = DataLoader(train_set
                                 , batch_size=args['batch_size']
