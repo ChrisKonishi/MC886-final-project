@@ -18,5 +18,5 @@ if __name__ == '__main__':
     sys.path.append(join(dirname(dirname(realpath(__file__))), 'dataset'))
     from GarbageClass import GarbageClass
 
-    data = GarbageClass(mode='val')
+    data = GarbageClass(mode='train')
     make_dataset_grid(data)

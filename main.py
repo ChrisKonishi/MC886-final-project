@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=64678, help="manual seed")
     parser.add_argument('--batch-size', type=int, default=32)
     parser.add_argument('--resume', type=str, default='', metavar='PATH', help="root directory where part/fold of previous train are saved")
-    parser.add_argument('--mode', type=str, default='train', choices=['train','test'], help='Options: [train, test]') #test after training though
+    parser.add_argument('--mode', type=str, default='train', choices=['train','test','plot'], help='Options: [train, test, plot]') #test after training though
 
     return vars(parser.parse_args())
 
@@ -164,12 +164,18 @@ def test(args):
     print('Confusion Matrix')
     print(confusion_matrix(gts, preds))
 
+def plot(args):
+    loss = torch.load(osp.join(args['log_dir'], 'last_state.pth'))['loss_data']
+    plot_loss(loss, args['log_dir'], 15)
 
 if __name__ == '__main__':
     args = parse_args()
     args['device'] = 'cuda' if torch.cuda.is_available() else 'cpu'
-
+    if args['mode'] == 'plot':
+        plot(args)
+        
     random.seed(args['seed'])
     if args['mode'] == 'train':
         train(args)
-    test(args)
+    if args['mode'] in ['train', 'test']:
+        test(args)
