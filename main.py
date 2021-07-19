@@ -131,7 +131,7 @@ def train(args):
 def test(args):
     if not osp.isdir(args['log_dir']):
         raise Exception(f'Missing directory: {args["log_dir"]}')
-    mode = 'test' if args['mode'] == 'test' else 'train'
+    mode = 'train' if args['mode'] == 'testOnTrain' else 'test'
     test_set = datasets[args['dataset']](mode=mode, size=models[args['model']][1], args=args)
     test_loader = DataLoader(test_set
                             , batch_size=1
@@ -143,7 +143,7 @@ def test(args):
     net = models[args['model']][0](test_set.get_nclass(), pretrained=args['pretrained']) #pass args
     net.to(args['device'])
 
-    sys.stdout = Logger(osp.join(args['log_dir'], 'log_test.txt' if args['mode']=='test' else 'log_testOnTrain.txt'), mode='w')
+    sys.stdout = Logger(osp.join(args['log_dir'], 'log_testOnTrain.txt' if args['mode']=='testOnTrain' else 'log_test.txt'), mode='w')
     state_dict = torch.load(osp.join(args['log_dir'], 'best_state.pth'))
     net.load_state_dict(state_dict['net'])
     net.eval()
