@@ -3,6 +3,7 @@ import argparse, sys
 import os, os.path as osp
 import random
 from torch.utils.data import DataLoader
+import time
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, confusion_matrix
 
 from dataset import datasets
@@ -82,6 +83,7 @@ def train(args):
 
     for epoch in range(initial_epoch+1, args['max_epoch']): #train_loop
         acu_loss_epoch = 0
+        ini_time = time.time()
         for ite, (img, label) in enumerate(train_loader):
             iteration += 1
             img = img.to(args['device'])
@@ -96,7 +98,7 @@ def train(args):
             acu_loss_epoch += loss.item()
             loss.backward()
             optim.step()
-
+        duration = time.time() - ini_time
         acu_loss_epoch = acu_loss_epoch/(ite+1)
         validation_loss, val_acc = val_loss(net, val_loader, f_loss, args['device'])
         loss_data['epoch'].append(epoch+1)
@@ -122,7 +124,8 @@ def train(args):
             state_dict['best_model'] = best_model
             torch.save(state_dict, osp.join(args['log_dir'], 'best_state.pth'))
         torch.save(state_dict, osp.join(args['log_dir'], 'last_state.pth'))
-        print(f'Epoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss:.4f}. Val Acc: {val_acc:.4f}. Best_model: {best_model}')
+        print(f'''Epoch: {epoch+1}/{args["max_epoch"]}. Train Loss: {acu_loss_epoch:.4f}. Val Loss: {validation_loss:.4f}. Val Acc: {val_acc:.4f}. Best_model: {best_model}. \
+            Time: {duration:.4f}''')
         sys.stdout.close_open()
 
 def test(args):
