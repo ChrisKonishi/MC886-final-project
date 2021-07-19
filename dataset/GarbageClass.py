@@ -42,7 +42,7 @@ class GarbageClass(Dataset):
             idx_file = self.dir+'one-indexed-files-notrash_test.txt'
         else:
             raise Exception(f'Invalid mode: {mode}')
-        if mode in ['val', 'test']:
+        if mode in ['val', 'test'] or args['mode'] == 'testOnTrain':
             compose = [
                 transforms.Resize(size)
             ]

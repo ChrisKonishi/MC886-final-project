@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=64678, help="manual seed")
     parser.add_argument('--batch-size', type=int, default=32)
     parser.add_argument('--resume', type=str, default='', metavar='PATH', help="root directory where part/fold of previous train are saved")
-    parser.add_argument('--mode', type=str, default='train', choices=['train','test','plot'], help='Options: [train, test, plot]') #test after training though
+    parser.add_argument('--mode', type=str, default='train', choices=['train','test','plot', 'testOnTrain'], help='Options: [train, test, plot, testOnTrain]') #test after training though
 
     return vars(parser.parse_args())
 
@@ -128,8 +128,8 @@ def train(args):
 def test(args):
     if not osp.isdir(args['log_dir']):
         raise Exception(f'Missing directory: {args["log_dir"]}')
-
-    test_set = datasets[args['dataset']](mode='test', size=models[args['model']][1], args=args)
+    mode = 'test' if args['mode'] == 'test' else 'train'
+    test_set = datasets[args['dataset']](mode=mode, size=models[args['model']][1], args=args)
     test_loader = DataLoader(test_set
                             , batch_size=1
                             , shuffle=False
@@ -140,7 +140,7 @@ def test(args):
     net = models[args['model']][0](test_set.get_nclass(), pretrained=args['pretrained']) #pass args
     net.to(args['device'])
 
-    sys.stdout = Logger(osp.join(args['log_dir'], 'log_test.txt'), mode='w')
+    sys.stdout = Logger(osp.join(args['log_dir'], 'log_test.txt' if args['mode']=='test' else 'log_testOnTrain.txt'), mode='w')
     state_dict = torch.load(osp.join(args['log_dir'], 'best_state.pth'))
     net.load_state_dict(state_dict['net'])
     net.eval()
@@ -174,5 +174,5 @@ if __name__ == '__main__':
     random.seed(args['seed'])
     if args['mode'] == 'train':
         train(args)
-    if args['mode'] in ['train', 'test']:
+    if args['mode'] in ['train', 'test', 'testOnTrain']:
         test(args)
