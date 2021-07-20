@@ -60,6 +60,9 @@ class GarbageClass(Dataset):
             file, label = row['img'], row['class']
             material = material_re.match(file).group()
             im = Image.open(osp.join(self.dir, material, file))
+            tmp = im
+            im = im.copy()
+            tmp.close()
             if im:
                 self.imgs.append(im)
                 self.labels.append(label-1)
