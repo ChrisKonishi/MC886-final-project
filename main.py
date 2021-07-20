@@ -23,11 +23,11 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=1e-4, help=f'Learning Rate')
     parser.add_argument('--pretrained', action='store_true') #always pass it, even during training
     parser.add_argument('--max-epoch', type=int, default='100')
-    parser.add_argument('--patience', default=-1, type=int,
-                        help="number of epochs without model improvement (-1 to disable it)")
+    #parser.add_argument('--patience', default=-1, type=int,
+    #                    help="number of epochs without model improvement (-1 to disable it)")
     parser.add_argument('--seed', type=int, default=64678, help="manual seed")
     parser.add_argument('--batch-size', type=int, default=32)
-    parser.add_argument('--resume', type=str, default='', metavar='PATH', help="root directory where part/fold of previous train are saved")
+    parser.add_argument('--resume', type=str, default='', metavar='PATH', help="root directory where previous train is saved")
     parser.add_argument('--mode', type=str, default='train', choices=['train','test','plot', 'testOnTrain'], help='Options: [train, test, plot, testOnTrain]') #test after training though
 
     return vars(parser.parse_args())
