@@ -12,6 +12,8 @@
 
 ## Execução
 
+- Extraia o conteúdo de ./dataset/garbage_classification.zip para ./dataset
+
 ```
 python3 main.py  [-h] [-d {GarbageClass}] [--log-dir LOG_DIR] [--model {resnet-18,resnet-101,inception-v3}] [--lr LR]
                  [--pretrained] [--max-epoch MAX_EPOCH] [--seed SEED] [--batch-size BATCH_SIZE]
