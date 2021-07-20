@@ -1,5 +1,7 @@
 # Classificação de Lixo Utilizando Redes Neurais
 
+[Apresentação do Projeto](https://youtu.be/_cj_H7Y2MQ8)
+
 ## Bibliotecas
 
 - Pytorch
