@@ -1,11 +1,12 @@
 # Classificação de Lixo Utilizando Redes Neurais
 
-## Requerimentos
+## Bibliotecas
 
 - Pytorch
 - Matplotlib
 - Numpy
 - Scikit-learn
+- Scikit-image
 
 ## Execução
 
@@ -29,3 +30,7 @@ python3 main.py  [-h] [-d {GarbageClass}] [--log-dir LOG_DIR] [--model {resnet-1
   --mode {train,test,plot,testOnTrain}
                         Options: [train, test, plot, testOnTrain]
 ```
+
+## Dataset
+
+https://www.kaggle.com/asdasdasasdas/garbage-classification
